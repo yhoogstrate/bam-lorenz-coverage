@@ -1,0 +1,5 @@
+click
+numpy
+pysam
+tqdm
+flake8

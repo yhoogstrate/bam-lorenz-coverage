@@ -11,68 +11,67 @@ from blc.blc import blc
 bam = '/home/youri/src/dr-disco.bak/tmp/tests/detect-intronic/test_19.fixed.bam'
 
 
-size_investigated_region = 0
 
-b = blc()
-idx_observed, size_investigated_region = b.bam_file_to_idx(bam)
+#b = blc()
+#idx_observed = b.bam_file_to_idx(bam)
 
-print(idx_observed)
-
-
-idx_observed = {0: 48129477, 56: 14, 55: 1, 52: 1, 50: 2, 49: 2, 48: 1, 47: 1, 44: 3, 43: 3, 41: 2, 40: 2, 38: 18, 37: 6, 34: 9, 35: 1, 31: 3, 30: 2, 29: 6, 27: 7, 26: 9, 24: 8, 23: 7, 22: 1, 21: 9, 20: 12, 19: 5, 18: 9, 17: 21, 16: 4, 15: 7, 13: 29, 12: 21, 11: 11, 8: 20, 7: 22, 5: 17, 1: 63, 2: 15, 4: 9, 6: 2, 9: 2, 14: 3, 36: 1, 33: 1, 32: 2, 28: 12, 25: 3, 10: 9}
-#idx_observed = {0: 48, 56: 14, 55: 1, 52: 1, 50: 2, 49: 2, 48: 1, 47: 1, 44: 3, 43: 3, 41: 2, 40: 2, 38: 18, 37: 6, 34: 9, 35: 1, 31: 3, 30: 2, 29: 6, 27: 7, 26: 9, 24: 8, 23: 7, 22: 1, 21: 9, 20: 12, 19: 5, 18: 9, 17: 21, 16: 4, 15: 7, 13: 29, 12: 21, 11: 11, 8: 20, 7: 22, 5: 17, 1: 63, 2: 15, 4: 9, 6: 2, 9: 2, 14: 3, 36: 1, 33: 1, 32: 2, 28: 12, 25: 3, 10: 9}
+#print(idx_observed)
 
 
-
-#coverage_graph_stats = b.estimate_cumulative_coverage_plot(idx_observed)
+idx_observed = {0: 9, 1: 2, 2: 4, 3: 1}
 
 """
-idx_observed = {
-    56: 14,
-    55: 1,
-    52: 1,
-    50: 2,
-    49: 2,
-    48: 1,
-    47: 1,
-    8: 20,
+          =====
+      =======
+    =====   =====
+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+0 0 1 2 2 2 3 2 1 0 0 0 0 0 0 0
 
-...
+stats table:
 
-    7: 22,
-    5: 17,
-    1: 63,
-    2: 15,
-    4: 9,
-    6: 2,
-    9: 2,
-    0: 100,
-    }
- """
- 
-""" 
-# coverage 56 komt 14 keer voor
-Y = 56 / (sum(keys))
-X =  14 / n_bases
+       |        Cumu   |  Seq.    Cumu
+Depth  | Freq    Freq  | Bases   Bases
+--------------------------------------- 
+  0    |   9   1+4+2+9 |  0*9      0
+  1    |   2    1+4+2  |  1*2     0+2
+  2    |   4     1+4   |  2*4    0+2+8
+  3    |   1      1    |  1*3   0+2+8+3
+
+
+cumu_freq = 1+4+2+9 = 16
+cumu_bases = 0+2+8+3 = 13
 """
 
 lorenz_idx = {}
-total_reads = sum(idx_observed)
-total_positions = sum(idx_observed.values())
-#print(total_reads)
-#print(total_positions)
 
-print("frac.genome\tfrac.total.reads")
-        
-accumulation_reads = 0
-accumulation_positions = 0
+previous_depth = None
 for depth in sorted(idx_observed, reverse = True):
-    positions = idx_observed[depth]
+    frac_of_genome = idx_observed[depth]
+    sequenced_bases = idx_observed[depth] * depth
     
-    accumulation_reads += depth
-    accumulation_positions += positions
-    #accumulation += idx_observed[key]
-    
-    print("%f\t%f" % (accumulation_positions/total_positions,accumulation_reads/total_reads))
-    #print("[%i: %ix]   frac genome [%i/%i] = %f\tfrac reads=[%i/%i] = %f" % (depth,positions,positions,total_positions,accumulation_positions/total_positions,accumulation_reads,total_reads,accumulation_reads/total_reads))
+    cumu_frac_of_genome = frac_of_genome
+    cumulative_sequenced_bases = sequenced_bases
+    if previous_depth:
+        cumu_frac_of_genome += lorenz_idx[previous_depth][0]
+        cumulative_sequenced_bases += lorenz_idx[previous_depth][1]
+    lorenz_idx[depth] = [cumu_frac_of_genome, cumulative_sequenced_bases]
+
+    previous_depth = depth
+
+total_covered_positions_of_genome = cumu_frac_of_genome
+total_sequenced_bases = cumulative_sequenced_bases
+
+"""
+for depth in sorted(idx_observed):
+    print(lorenz_idx[depth])
+
+"""
+
+print("X-fraction-sequenced-bases\tY-fraction-genome-covered")
+for depth in lorenz_idx:
+    """
+    The zero statistic is confusing and needs to be disabled.
+    """
+    if depth > 0:
+        print(str(round(1.0 * lorenz_idx[depth][1] / total_sequenced_bases, 4)) + "\t" + str(round(1.0 * lorenz_idx[depth][0] / total_covered_positions_of_genome,4)))
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-
+import pysam
 import subprocess
 from tqdm import tqdm
 
@@ -10,14 +10,17 @@ class blc:
         pass
     
     def bam_file_to_idx(self, bam_file):
-        for line in tqdm(pysam.samtools.depth('-a', bam, split_lines=True)):
+        idx_observed = {}
+        for line in tqdm(pysam.samtools.depth('-a', bam_file, split_lines=True)):
             depth = line.split('\t',2)[-1]
             
             if not depth in idx_observed:
                 idx_observed[depth] = 1
             else:
                 idx_observed[depth]  += 1
-            size_investigated_region += 1
+
+        idx_observed = {int(key): value for (key, value) in idx_observed.items()}
+        return idx_observed
 
     def bam_file_to_idx_old(self, bam_file):
         size_investigated_region = 0
