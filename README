@@ -33,4 +33,4 @@ Options:
   --help                     Show this message and exit.
 ```
 
-The lowercase arguments (-l, -c) allow extraction of the raw data tables for custom plotting. The uppercase arguments (-L, -C) directly generate a plot. Remark that this plot can only contain one sample per plot. For multi-sample plots, use the columns and your imagination.
+The lowercase arguments (-l, -c) allow extraction of the raw data tables for custom plotting. The uppercase arguments (-L, -C) directly generate a plot. The implemented plot only contains one sample per plot. For multi-sample plots, use the column tables and your imagination.
