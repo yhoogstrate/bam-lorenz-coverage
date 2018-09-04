@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import tempfile
 import os
 import threading
+import time
+
 
 
 class bamlorenzcoverage:
@@ -22,25 +24,42 @@ class bamlorenzcoverage:
         idx_observed = {}
         
         # FIFO stream / named pipe instead of actual file - doesnt work nicely
-        tmp_filename = os.path.join(tempfile.mkdtemp() + '.depth.txt')
-        open(tmp_filename, 'a').close()
+        tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
+        #open(tmp_filename, 'a').close()
+        os.mkfifo(tmp_filename, 777)
         
-        #t = threading.Thread(target=pysam.samtools.depth, args=['-r','chr1:5000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
-        #t.start()
-        
+
         print("Exporting Depth to: "+tmp_filename)
-        pysam.samtools.depth('-a', bam_file, save_stdout=tmp_filename)
+
+        t = threading.Thread(target=pysam.samtools.depth, args=['-r','chr21:40199900-40200000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
+        t.start()
         
-        print("Parsing")
+        #pysam.samtools.depth('-r','chr21:40199900-40200000','-a', bam_file, save_stdout=tmp_filename)
+        #import time
+        #time.sleep(5)
+        
+        #print("Parsing")
+        
+        #fh = os.open(tmp_filename, os.O_RDONLY)
+        #while t.isAlive():
+        #    print("q")
+        #    time.sleep(1)
+            #c = os.read(fh, 1024)
+            #print(c)
+        
+        #print("q is over")
+        
+        """
         with open(tmp_filename, 'r') as fh:
             for line in fh:
+                print("found line: "+ line)
                 depth = line.strip('\n').split('\t',2)[-1]
                 
                 if not depth in idx_observed:
                     idx_observed[depth] = 1
                 else:
                     idx_observed[depth]  += 1
-
+        """
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
         os.remove(tmp_filename)
