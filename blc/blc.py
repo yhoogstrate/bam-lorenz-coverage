@@ -9,13 +9,41 @@ import matplotlib.pyplot as plt
 class bamlorenzcoverage:
     def __init__(self):
         pass
-    
+  
     def bam_file_to_idx(self, bam_file):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
         """
         idx_observed = {}
-        for line in tqdm(pysam.samtools.depth(bam_file, split_lines=True)):
+        depth = ''
+        status = 0
+        for char in pysam.samtools.depth(bam_file):
+            if char == '\n':
+                if not depth in idx_observed:
+                    idx_observed[depth] = 1
+                else:
+                    idx_observed[depth]  += 1
+
+                status = 0
+                depth = ''
+            else:
+                if status == 2:
+                    depth += char
+                elif char == '\t':
+                    status +=1 
+
+        #print(idx_observed)
+
+        idx_observed = {int(key): value for (key, value) in idx_observed.items()}
+        return idx_observed
+
+  
+    def bam_file_to_idx_mem_unsafe(self, bam_file):
+        """
+        Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
+        """
+        idx_observed = {}
+        for line in tqdm(pysam.samtools.depth('-a', bam_file, split_lines=True)):
             depth = line.split('\t',2)[-1]
             
             if not depth in idx_observed:
