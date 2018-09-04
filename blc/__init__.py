@@ -7,7 +7,7 @@
 """
 
 
-__version_info__ = ('1', '0', '0')
+__version_info__ = ('1', '0', '2')
 __version__ = '.'.join(__version_info__) if (len(__version_info__) == 3) else '.'.join(__version_info__[0:3]) + "-" + __version_info__[3]
 __author__ = 'Youri Hoogstrate'
 __homepage__ = 'https://github.com/yhoogstrate/bam-lorenz-coverage'
