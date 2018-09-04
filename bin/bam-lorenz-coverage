@@ -10,22 +10,30 @@ import blc
 from blc.blc import bamlorenzcoverage
 
 
-"""
-python setup.py install ; bin/bam-lorenz-coverage /home/youri/src/dr-disco.bak/tmp/tests/detect-intronic/test_19.fixed.bam
-
-"""
-
-
 @click.command()
 @click.version_option(blc.__version__ + "\n\n" + blc.__license_notice__ + "\n\nCopyright (C) 2018  " + blc.__author__ + ".\n\nFor more info please visit:\n" + blc.__homepage__)
 @click.argument('input_alignment_file', type=click.Path(exists=True))
-@click.option('-l','--lorenz-table', help='Output table Lorenz-curve.')
-@click.option('-c','--coverage-table', help='Output table Coverage-graph.')
+@click.option('-l','--lorenz-table',nargs=1,  help='Output table Lorenz-curve (for stdout use: -)')
+@click.option('-c','--coverage-table',nargs=1,  help='Output table Coverage-graph (for stdout use: -)')
 @click.option('-L','--lorenz-svg', help='Output figure Lorenz-curve (SVG).')
 @click.option('-C','--coverage-svg', help='Output figure Coverage-graph (SVG).')
 def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file):
     b = bamlorenzcoverage()
     idx_observed = b.bam_file_to_idx(input_alignment_file)
+
+
+    if coverage_table or coverage_svg:
+        cumulative_coverage_curves = b.estimate_cumulative_coverage_curves(idx_observed)
+        
+        if coverage_table:
+            if coverage_table == '-':
+                b.export_cumulative_coverage_curves(cumulative_coverage_curves, sys.stdout)
+            else:
+                with open(coverage_table, 'w') as fh:
+                    b.export_cumulative_coverage_curves(cumulative_coverage_curves, fh)
+
+        if coverage_svg:
+            b.export_cumulative_coverage_plot(cumulative_coverage_curves, coverage_svg)
 
     if lorenz_table or lorenz_svg:
         lorenz_curves = b.estimatea_lorenz_curves(idx_observed)
@@ -37,7 +45,8 @@ def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_
                 with open(lorenz_table, 'w') as fh:
                     b.export_lorenz_curves(lorenz_curves, fh)
 
-
+        if lorenz_svg:
+            b.export_lorenz_plot(lorenz_curves, lorenz_svg)
 
 def main():
     CLI()

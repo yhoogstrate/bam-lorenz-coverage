@@ -3,3 +3,4 @@ numpy
 pysam
 tqdm
 flake8
+matplotlib

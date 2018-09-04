@@ -3,6 +3,7 @@
 import pysam
 import subprocess
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 class bamlorenzcoverage:
@@ -10,6 +11,9 @@ class bamlorenzcoverage:
         pass
     
     def bam_file_to_idx(self, bam_file):
+        """
+        Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
+        """
         idx_observed = {}
         for line in tqdm(pysam.samtools.depth(bam_file, split_lines=True)):
             depth = line.split('\t',2)[-1]
@@ -27,7 +31,7 @@ class bamlorenzcoverage:
         idx_observed = {}
 
         # skip -a
-        with subprocess.Popen(['samtools', 'depth', bam_file], stdout=subprocess.PIPE, universal_newlines=True) as popen:
+        with subprocess.Popen(['samtools', 'depth', '-a', bam_file], stdout=subprocess.PIPE, universal_newlines=True) as popen:
             for line in iter(popen.stdout.readline, ""):
                 depth = line.strip('\n').split('\t')[-1]
                 
@@ -40,6 +44,7 @@ class bamlorenzcoverage:
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
         return (idx_observed, size_investigated_region)
+
 
     def coverage_file_to_idx(self, coverage_file):
         """
@@ -65,16 +70,16 @@ class bamlorenzcoverage:
 
         return (idx_observed, size_investigated_region)
 
-    def estimate_cumulative_coverage_plot(self, idx_observed):
+    def estimate_cumulative_coverage_curves(self, idx_observed):
         """
+        IN:
         0: 100
         1: 70
         2: 15
         3: 50
         5: 25
         
-        ->
-        
+        OUT:
         0: 100+70+15+50+25
         1: 70+15+50+25
         2: 15+50+25
@@ -83,10 +88,11 @@ class bamlorenzcoverage:
         
         -----
         
-        work top-down to save accumlated positions
+        work top-down to save accumulated positions
         """
+        cumulative_coverage_curves = {'minimum_coverage_depth':[], 'percentage_genome_covered':[]}
+
         idx_observed_cumulative = {}
-        
         accumulation = 0
         for key in sorted(idx_observed, reverse = True):
             accumulation += idx_observed[key]
@@ -97,7 +103,22 @@ class bamlorenzcoverage:
             idx_observed_cumulative_proportional[key] = 100.0 * idx_observed_cumulative[key] / accumulation
 
         for min_depth in sorted(idx_observed_cumulative_proportional):
-            print(str(min_depth) + "\t" + str(idx_observed_cumulative_proportional[min_depth]))
+            cumulative_coverage_curves['minimum_coverage_depth'].append(min_depth)
+            cumulative_coverage_curves['percentage_genome_covered'].append(idx_observed_cumulative_proportional[min_depth])
+            
+        return cumulative_coverage_curves
+
+    def export_cumulative_coverage_curves(self, cumulative_coverage_curves, output_stream):
+        output_stream.write("X_minimum_coverage_depth\tY_percentage_genome_covered\n")
+        for n in range(len(cumulative_coverage_curves['minimum_coverage_depth'])):
+            output_stream.write(str(cumulative_coverage_curves['minimum_coverage_depth'][n]) + "\t" + str(cumulative_coverage_curves['percentage_genome_covered'][n]) + "\n")
+
+    def export_cumulative_coverage_plot(self, cumulative_coverage_curves, output_file):
+        plt.plot(cumulative_coverage_curves['minimum_coverage_depth'],cumulative_coverage_curves['percentage_genome_covered'],'-bo')
+        plt.xlabel('Minimum coverage depth')
+        plt.ylabel('Percenatge genome covered')
+        plt.savefig(output_file)
+        plt.gcf().clear()
 
     def estimatea_lorenz_curves(self, idx_observed):
         """
@@ -162,3 +183,12 @@ cumu_bases = 0+2+8+3 = 13
         output_stream.write("X-fraction-sequenced-bases\tY-fraction-genome-covered\n")
         for n in range(len(lorenz_curves['fraction_reads'])):
             output_stream.write(str(lorenz_curves['fraction_reads'][n]) + "\t" + str(lorenz_curves['fraction_genome'][n]) + "\n")
+
+    def export_lorenz_plot(self, lorenz_curves, output_file):
+        plt.plot([0.0,1.0],[0.0,1.0],'k--')
+        plt.plot(lorenz_curves['fraction_reads'],lorenz_curves['fraction_genome'],'-bo')
+        plt.xlabel('Fraction sequenced bases')
+        plt.ylabel('Fraction covered genome')
+        plt.savefig(output_file)
+        plt.gcf().clear()
+
