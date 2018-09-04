@@ -1,77 +1,48 @@
 #!/usr/bin/env python
 
-import pysam
+import click
 from tqdm import tqdm
+import pysam
+import sys
 
 
-from blc.blc import blc
+import blc
+from blc.blc import bamlorenzcoverage
 
-#bam = '/mnt/galaxian/data/users/youri/ProToCol/drdisco_analysis/bam_hg38/poly-A_G-110/Aligned.sortedByCoord.out.bam'
-#pysam.samtools.depth('/home/youri/src/dr-disco.bak/tmp/bla.bam')
-bam = '/home/youri/src/dr-disco.bak/tmp/tests/detect-intronic/test_19.fixed.bam'
-
-
-
-#b = blc()
-#idx_observed = b.bam_file_to_idx(bam)
-
-#print(idx_observed)
-
-
-idx_observed = {0: 9, 1: 2, 2: 4, 3: 1}
 
 """
-          =====
-      =======
-    =====   =====
--+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-0 0 1 2 2 2 3 2 1 0 0 0 0 0 0 0
-
-stats table:
-
-       |        Cumu   |  Seq.    Cumu
-Depth  | Freq    Freq  | Bases   Bases
---------------------------------------- 
-  0    |   9   1+4+2+9 |  0*9      0
-  1    |   2    1+4+2  |  1*2     0+2
-  2    |   4     1+4   |  2*4    0+2+8
-  3    |   1      1    |  1*3   0+2+8+3
-
-
-cumu_freq = 1+4+2+9 = 16
-cumu_bases = 0+2+8+3 = 13
-"""
-
-lorenz_idx = {}
-
-previous_depth = None
-for depth in sorted(idx_observed, reverse = True):
-    frac_of_genome = idx_observed[depth]
-    sequenced_bases = idx_observed[depth] * depth
-    
-    cumu_frac_of_genome = frac_of_genome
-    cumulative_sequenced_bases = sequenced_bases
-    if previous_depth:
-        cumu_frac_of_genome += lorenz_idx[previous_depth][0]
-        cumulative_sequenced_bases += lorenz_idx[previous_depth][1]
-    lorenz_idx[depth] = [cumu_frac_of_genome, cumulative_sequenced_bases]
-
-    previous_depth = depth
-
-total_covered_positions_of_genome = cumu_frac_of_genome
-total_sequenced_bases = cumulative_sequenced_bases
-
-"""
-for depth in sorted(idx_observed):
-    print(lorenz_idx[depth])
+python setup.py install ; bin/bam-lorenz-coverage /home/youri/src/dr-disco.bak/tmp/tests/detect-intronic/test_19.fixed.bam
 
 """
 
-print("X-fraction-sequenced-bases\tY-fraction-genome-covered")
-for depth in lorenz_idx:
-    """
-    The zero statistic is confusing and needs to be disabled.
-    """
-    if depth > 0:
-        print(str(round(1.0 * lorenz_idx[depth][1] / total_sequenced_bases, 4)) + "\t" + str(round(1.0 * lorenz_idx[depth][0] / total_covered_positions_of_genome,4)))
+
+@click.command()
+@click.version_option(blc.__version__ + "\n\n" + blc.__license_notice__ + "\n\nCopyright (C) 2018  " + blc.__author__ + ".\n\nFor more info please visit:\n" + blc.__homepage__)
+@click.argument('input_alignment_file', type=click.Path(exists=True))
+@click.option('-l','--lorenz-table', help='Output table Lorenz-curve.')
+@click.option('-c','--coverage-table', help='Output table Coverage-graph.')
+@click.option('-L','--lorenz-svg', help='Output figure Lorenz-curve (SVG).')
+@click.option('-C','--coverage-svg', help='Output figure Coverage-graph (SVG).')
+def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file):
+    b = bamlorenzcoverage()
+    idx_observed = b.bam_file_to_idx(input_alignment_file)
+
+    if lorenz_table or lorenz_svg:
+        lorenz_curves = b.estimatea_lorenz_curves(idx_observed)
+        
+        if lorenz_table:
+            if lorenz_table == '-':
+                b.export_lorenz_curves(lorenz_curves, sys.stdout)
+            else:
+                with open(lorenz_table, 'w') as fh:
+                    b.export_lorenz_curves(lorenz_curves, fh)
+
+
+
+def main():
+    CLI()
+
+
+if __name__ == '__main__':
+    main()
 
