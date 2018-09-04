@@ -1,0 +1,6 @@
+.eggs
+dependencies/
+dist/
+build/
+.venv
+*.egg-info
