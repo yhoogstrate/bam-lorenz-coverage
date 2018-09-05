@@ -1,0 +1,5 @@
+05-sept-2018:  Youri Hoogstrate
+	* v2.0.0 - does not require to use samtools, does not take all
+	  pysam.samtools.depth output into memory, does not export
+	  pysam.samtools.depth to a file but uses parallelized thread
+	  that writes to a FIFO.
