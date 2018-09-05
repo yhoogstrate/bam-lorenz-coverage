@@ -35,25 +35,29 @@ class bamlorenzcoverage:
 
         fh = os.open(tmp_filename, os.O_RDONLY)
         
+        lastline = ''
         depth = ''
         status = 0
-        char = os.read(fh, 1).decode('ascii')
-        while char:
-            if char == '\n':
-                if not depth in idx_observed:
-                    idx_observed[depth] = 1
-                else:
-                    idx_observed[depth]  += 1
-
-                status = 0
-                depth = ''
+        chunk = os.read(fh, 1024*4).decode('ascii')
+        while chunk:
+            chunk = lastline + chunk
+            split = chunk.split('\n')
+            if chunk[-1] == b'\n':
+                lines = split
+                lastline = ''
             else:
-                if status == 2:
-                    depth += char
-                elif char == '\t':
-                    status +=1 
+                lines = split[:-1]
+                lastline = split[-1]
 
-            char = os.read(fh, 1).decode('ascii')
+                for line in lines:
+                    depth = line.split('\t',2)[-1]
+                    
+                    if not depth in idx_observed:
+                        idx_observed[depth] = 1
+                    else:
+                        idx_observed[depth]  += 1
+
+                chunk = os.read(fh, 1024*4).decode('ascii')
 
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
