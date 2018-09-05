@@ -30,7 +30,7 @@ class bamlorenzcoverage:
         os.mkfifo(tmp_filename)
 
         # I tried this with the Threading class but this often didnt parallelize
-        t1 = Process(target=pysam.samtools.depth, args=['-r','chr21:41000000-43000000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
+        t1 = Process(target=pysam.samtools.depth, args=['-a',bam_file], kwargs={'save_stdout': tmp_filename})
         t1.start()
 
         fh = os.open(tmp_filename, os.O_RDONLY)
