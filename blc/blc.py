@@ -6,40 +6,56 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tempfile
 import os
-import threading
+from multiprocessing import Process
+import time
+
 
 
 class bamlorenzcoverage:
     def __init__(self):
         pass
   
-        # save_stdout = fifoe
-
     def bam_file_to_idx(self, bam_file):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
         """
+        
+        # nicer way to ctrl killing the child process first and not have hangs with ctrl c
+        #https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
+        
         idx_observed = {}
         
-        # FIFO stream / named pipe instead of actual file - doesnt work nicely
-        tmp_filename = os.path.join(tempfile.mkdtemp() + '.depth.txt')
-        open(tmp_filename, 'a').close()
+        # FIFO stream / named pipe instead of actual file - saves humongous amounts of disk space for temp files
+        tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
+        os.mkfifo(tmp_filename)
+
+        # I tried this with the Threading class but this often didnt parallelize
+        parallel_thread = Process(target=pysam.samtools.depth, args=['-a',bam_file], kwargs={'save_stdout': tmp_filename})
+        parallel_thread.start()
+
+        fh = os.open(tmp_filename, os.O_RDONLY)
         
-        #t = threading.Thread(target=pysam.samtools.depth, args=['-r','chr1:5000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
-        #t.start()
-        
-        print("Exporting Depth to: "+tmp_filename)
-        pysam.samtools.depth('-a', bam_file, save_stdout=tmp_filename)
-        
-        print("Parsing")
-        with open(tmp_filename, 'r') as fh:
-            for line in fh:
-                depth = line.strip('\n').split('\t',2)[-1]
-                
-                if not depth in idx_observed:
-                    idx_observed[depth] = 1
-                else:
-                    idx_observed[depth]  += 1
+        chunk = os.read(fh, 1024*4).decode('ascii')
+        while chunk:
+            split = chunk.split('\n')
+
+            if chunk[-1] == '\n':
+                lines = split
+                chunk = os.read(fh, 1024*4).decode('ascii')
+            else:
+                lines = split[:-1]
+                chunk = split[-1] + os.read(fh, 1024*4).decode('ascii')
+
+            for line in lines:
+                if line: # last line is empty line ('')
+                    depth = line.split('\t',2)[-1]
+
+                    if not depth in idx_observed:
+                        idx_observed[depth] = 1
+                    else:
+                        idx_observed[depth]  += 1
+
+            
 
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
