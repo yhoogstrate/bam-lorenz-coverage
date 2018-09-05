@@ -36,7 +36,7 @@ def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_
             b.export_cumulative_coverage_plot(cumulative_coverage_curves, coverage_svg)
 
     if lorenz_table or lorenz_svg:
-        lorenz_curves = b.estimatea_lorenz_curves(idx_observed)
+        lorenz_curves = b.estimate_lorenz_curves(idx_observed)
         
         if lorenz_table:
             if lorenz_table == '-':

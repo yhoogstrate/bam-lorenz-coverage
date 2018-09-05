@@ -200,7 +200,7 @@ class bamlorenzcoverage:
         plt.savefig(output_file)
         plt.gcf().clear()
 
-    def estimatea_lorenz_curves(self, idx_observed):
+    def estimate_lorenz_curves(self, idx_observed):
         """
         In:
         
