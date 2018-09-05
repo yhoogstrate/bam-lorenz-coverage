@@ -25,30 +25,31 @@ class bamlorenzcoverage:
         
         # FIFO stream / named pipe instead of actual file - doesnt work nicely
         tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
-        #open(tmp_filename, 'a').close()
-        os.mkfifo(tmp_filename, 777)
-        
 
         print("Exporting Depth to: "+tmp_filename)
 
-        t = threading.Thread(target=pysam.samtools.depth, args=['-r','chr21:40199900-40200000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
-        t.start()
+        #pysam.samtools.depth(bam_file, save_stdout_fifo=tmp_filename)
+
+        t1 = threading.Thread(target=pysam.samtools.depth, args=[bam_file], kwargs={'save_stdout_fifo': tmp_filename})
+        t1.daemon = True
+        t1.start()
         
-        #pysam.samtools.depth('-r','chr21:40199900-40200000','-a', bam_file, save_stdout=tmp_filename)
-        #import time
-        #time.sleep(5)
+        #def parse_fifo(tmp_filename):
+        print("Parsing")
+        #time.sleep(1)
+
+        fh = os.open(tmp_filename, os.O_RDONLY)
+        for i in range(8):
+            print("iter: ",i)
+            c = os.read(fh, 20)
+            #time.sleep(1)
+            print(c)
         
-        #print("Parsing")
         
-        #fh = os.open(tmp_filename, os.O_RDONLY)
-        #while t.isAlive():
-        #    print("q")
-        #    time.sleep(1)
-            #c = os.read(fh, 1024)
-            #print(c)
-        
-        #print("q is over")
-        
+#        t2 = threading.Thread(target=parse_fifo, args=[tmp_filename])
+#        t2.start()
+
+
         """
         with open(tmp_filename, 'r') as fh:
             for line in fh:
