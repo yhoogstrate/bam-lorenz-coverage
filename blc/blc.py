@@ -6,7 +6,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tempfile
 import os
-import threading
+from multiprocessing import Process
 import time
 
 
@@ -15,52 +15,46 @@ class bamlorenzcoverage:
     def __init__(self):
         pass
   
-        # save_stdout = fifoe
-
     def bam_file_to_idx(self, bam_file):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
         """
+        
+        # nicer way to ctrl killing the child process first and not have hangs with ctrl c
+        #https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
+        
         idx_observed = {}
         
-        # FIFO stream / named pipe instead of actual file - doesnt work nicely
+        # FIFO stream / named pipe instead of actual file - saves humongous amounts of disk space for temp files
         tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
+        os.mkfifo(tmp_filename)
 
-        print("Exporting Depth to: "+tmp_filename)
-
-        #pysam.samtools.depth(bam_file, save_stdout_fifo=tmp_filename)
-
-        t1 = threading.Thread(target=pysam.samtools.depth, args=[bam_file], kwargs={'save_stdout_fifo': tmp_filename})
-        t1.daemon = True
+        # I tried this with the Threading class but this often didnt parallelize
+        t1 = Process(target=pysam.samtools.depth, args=['-r','chr21:41000000-43000000','-a',bam_file], kwargs={'save_stdout': tmp_filename})
         t1.start()
-        
-        #def parse_fifo(tmp_filename):
-        print("Parsing")
-        #time.sleep(1)
 
         fh = os.open(tmp_filename, os.O_RDONLY)
-        for i in range(8):
-            print("iter: ",i)
-            c = os.read(fh, 20)
-            #time.sleep(1)
-            print(c)
         
-        
-#        t2 = threading.Thread(target=parse_fifo, args=[tmp_filename])
-#        t2.start()
-
-
-        """
-        with open(tmp_filename, 'r') as fh:
-            for line in fh:
-                print("found line: "+ line)
-                depth = line.strip('\n').split('\t',2)[-1]
-                
+        depth = ''
+        status = 0
+        char = os.read(fh, 1).decode('ascii')
+        while char:
+            if char == '\n':
                 if not depth in idx_observed:
                     idx_observed[depth] = 1
                 else:
                     idx_observed[depth]  += 1
-        """
+
+                status = 0
+                depth = ''
+            else:
+                if status == 2:
+                    depth += char
+                elif char == '\t':
+                    status +=1 
+
+            char = os.read(fh, 1).decode('ascii')
+
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
         os.remove(tmp_filename)
