@@ -1,7 +1,10 @@
 language: python
 
 python:
-  - "3.7"
+  - '3.5'
+  - '3.6'
+# of course 3.7 doesn't work with travis because python 3.7 breaks with everything today - pysam, travis, flake8
+#  - "3.7"
 #  - "3.5-dev" # 3.5 development branch
 
 install:
