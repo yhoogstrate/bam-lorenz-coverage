@@ -248,7 +248,7 @@ cumu_bases = 0+2+8+3 = 13
         total_covered_positions_of_genome = cumu_frac_of_genome
         total_sequenced_bases = cumulative_sequenced_bases
 
-        lorenz_curves = {'fraction_reads': [], 'fraction_genome': []}
+        lorenz_curves = {'fraction_reads': [0.0], 'fraction_genome': [0.0]}
         for depth in sorted(lorenz_idx, reverse=True):
             if depth != 0:
                 lorenz_curves['fraction_reads'].append(round(1.0 * lorenz_idx[depth][1] / total_sequenced_bases, 4))

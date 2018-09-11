@@ -39,19 +39,19 @@ class TestIntronicBreakDetection(unittest.TestCase):
         #           x x x x x
         #           x x x x x
         # - - - - - - - - - - - - - - -
-        
+
         # pct covered [  0 read ] =  15 / 15  = 100.0%
         # pct covered [ 1+ read ] =   5 / 15  =  33.3%
         # pct covered [ 2+ read ] =   5 / 15  =  33.3%
         # pct covered [ 3+ read ] =   5 / 15  =  33.3%
-        
-        idx = {0:10, 3:5}
+
+        idx = {0: 10, 3: 5}
 
         b = bamlorenzcoverage()
         cc = b.estimate_cumulative_coverage_curves(idx)
 
-        #import sys
-        #print(cc, file=sys.stderr)
+        # import sys
+        # print(cc, file=sys.stderr)
         self.assertDictEqual(cc, {'minimum_coverage_depth': [0, 3], 'percentage_genome_covered': [100.0, 100.0 * 1.0 / 3.0]})
 
     def test_003_estimate_idx_from_bam(self):
@@ -59,20 +59,20 @@ class TestIntronicBreakDetection(unittest.TestCase):
         #           x x x x x x x x x x
         # x x x x x x x x x x x x x x x
         # - - - - - - - - - - - - - - - - - - - - - - - - -
-        
+
         # pct covered [  0 read ] =  25 / 25  = 100.0%
         # pct covered [ 1+ read ] =  15 / 25  =  60.0%
         # pct covered [ 2+ read ] =  10 / 15  =  40.0%
         # pct covered [ 3+ read ] =   5 / 15  =  20.0%
-        
-        idx = {0:10, 1:5, 2:5, 3:5}
+
+        idx = {0: 10, 1: 5, 2: 5, 3: 5}
 
         b = bamlorenzcoverage()
         cc = b.estimate_cumulative_coverage_curves(idx)
 
-        #import sys
-        #print(cc, file=sys.stderr)
-        
+        # import sys
+        # print(cc, file=sys.stderr)
+
         self.assertDictEqual(cc, {'minimum_coverage_depth': [0, 1, 2, 3], 'percentage_genome_covered': [100.0, 60.0, 40.0, 20.0]})
 
     def test_004_test_splice_junction(self):
@@ -135,6 +135,48 @@ class TestIntronicBreakDetection(unittest.TestCase):
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 372, 1: 48, 2: 80})
 
+    def test_008_lorenz_01(self):
+        #     x x x x
+        # - - - - - - - - - -
+
+        idx = {0: 6, 1: 4}
+
+        b = bamlorenzcoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0]})
+
+    def test_009_lorenz_02(self):
+        # everything covered, is at least covered even densely
+        #     x x x x
+        #     x x x x
+        # - - - - - - - - - -
+
+        idx = {0: 6, 2: 4}
+
+        b = bamlorenzcoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0]})
+
+    def test_010_lorenz_03(self):
+        # everything covered, is at least covered even densely
+        #         x x x x x
+        #   x x x x x
+        # - - - - - - - - - -
+
+        idx = {0: 6, 1: 6, 2: 2}
+
+        b = bamlorenzcoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0]})
 
 
 if __name__ == '__main__':
