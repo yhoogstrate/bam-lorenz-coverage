@@ -1,5 +1,5 @@
-click
 numpy
+click
 pysam
 tqdm
 flake8

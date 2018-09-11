@@ -1,3 +1,6 @@
+11-sept-2018:  Youri Hoogstrate
+	* v2.1.0 - Adds unit tests and can calculate ROC for Lorenz curves
+
 05-sept-2018:  Youri Hoogstrate
 	* v2.0.0 - does not require to use samtools, does not take all
 	  pysam.samtools.depth output into memory, does not export

@@ -12,10 +12,11 @@ from blc.blc import bamlorenzcoverage
 @click.version_option(blc.__version__ + "\n\n" + blc.__license_notice__ + "\n\nCopyright (C) 2018  " + blc.__author__ + ".\n\nFor more info please visit:\n" + blc.__homepage__)
 @click.argument('input_alignment_file', type=click.Path(exists=True))
 @click.option('-l', '--lorenz-table', nargs=1, help='Output table Lorenz-curve (for stdout use: -)')
+@click.option('-x', '--roc', is_flag=True, help='Output Lorenz-curve ROC to $lorenz_table.roc.txt\n[ requires --lorenz-table to be set to file ]')
 @click.option('-c', '--coverage-table', nargs=1, help='Output table Coverage-graph (for stdout use: -)')
 @click.option('-L', '--lorenz-svg', help='Output figure Lorenz-curve (SVG).')
 @click.option('-C', '--coverage-svg', help='Output figure Coverage-graph (SVG).')
-def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file):
+def CLI(lorenz_table, roc, coverage_table, lorenz_svg, coverage_svg, input_alignment_file):
     b = bamlorenzcoverage()
     idx_observed = b.bam_file_to_idx(input_alignment_file)
 
@@ -41,6 +42,9 @@ def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_
             else:
                 with open(lorenz_table, 'w') as fh:
                     b.export_lorenz_curves(lorenz_curves, fh)
+                if roc:
+                    with open(lorenz_table + '.roc.txt', 'w') as fh:
+                        fh.write(str(lorenz_curves['roc']) + "\n")
 
         if lorenz_svg:
             b.export_lorenz_plot(lorenz_curves, lorenz_svg)

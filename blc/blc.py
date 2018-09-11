@@ -248,12 +248,24 @@ cumu_bases = 0+2+8+3 = 13
         total_covered_positions_of_genome = cumu_frac_of_genome
         total_sequenced_bases = cumulative_sequenced_bases
 
+        previous = [0, 0]
+        top = 0
+        denom = total_sequenced_bases * total_covered_positions_of_genome * 2
+
         lorenz_curves = {'fraction_reads': [0.0], 'fraction_genome': [0.0]}
         for depth in sorted(lorenz_idx, reverse=True):
             if depth != 0:
                 lorenz_curves['fraction_reads'].append(round(1.0 * lorenz_idx[depth][1] / total_sequenced_bases, 4))
                 lorenz_curves['fraction_genome'].append(round(1.0 * lorenz_idx[depth][0] / total_covered_positions_of_genome, 4))
 
+                top += (lorenz_idx[depth][1] - previous[1]) * (lorenz_idx[depth][0] - previous[0])
+                top += (lorenz_idx[depth][1] - previous[1]) * (previous[0]) * 2
+
+                previous = lorenz_idx[depth]
+
+        roc = 1.0 * top / denom
+
+        lorenz_curves['roc'] = roc
         return lorenz_curves
 
     def export_lorenz_curves(self, lorenz_curves, output_stream):
@@ -261,9 +273,12 @@ cumu_bases = 0+2+8+3 = 13
         for n in range(len(lorenz_curves['fraction_reads'])):
             output_stream.write(str(lorenz_curves['fraction_reads'][n]) + "\t" + str(lorenz_curves['fraction_genome'][n]) + "\n")
 
-    def export_lorenz_plot(self, lorenz_curves, output_file):
+    def export_lorenz_plot(self, lorenz_curves, output_file, sign_digits=3):
         plt.plot([0.0, 1.0], [0.0, 1.0], 'k--')
         plt.plot(lorenz_curves['fraction_reads'], lorenz_curves['fraction_genome'], '-bo')
+        str_roc = round(lorenz_curves['roc'], sign_digits)
+        a = '{0:.' + str(sign_digits) + 'f}'
+        plt.text(0.0, 0.95, 'ROC=' + a.format(str_roc), fontsize=14)
         plt.xlabel('Fraction sequenced bases')
         plt.ylabel('Fraction covered genome')
         plt.savefig(output_file)
