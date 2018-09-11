@@ -1,0 +1,22 @@
+language: python
+
+python:
+  - '3.5'
+  - '3.6'
+# of course 3.7 doesn't work with travis because python 3.7 breaks with everything today - pysam, travis, flake8
+#  - "3.7"
+#  - "3.5-dev" # 3.5 development branch
+
+install:
+# nose installs nosetests, while in 2.7 nosetests installed nosetests
+  - pip install flake8 cython nose
+# pysam does currently (already for 2 months...) not install with python 3.7 via pip
+  - pip install https://github.com/pysam-developers/pysam/archive/v0.15.0.zip
+  - python setup.py install
+
+script:
+  - nosetests tests/*.py
+  - ./scripts/flake8.sh
+
+notifications:
+  email: false
