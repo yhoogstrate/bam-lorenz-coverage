@@ -31,7 +31,49 @@ class TestIntronicBreakDetection(unittest.TestCase):
         idx = b.bam_file_to_idx(input_file_bam)
 
         # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 392, 1: 108})
+
+    def test_002_estimate_idx_from_bam(self):
+        #           x x x x x
+        #           x x x x x
+        #           x x x x x
+        # - - - - - - - - - - - - - - -
+        
+        # pct covered [  0 read ] =  15 / 15  = 100.0%
+        # pct covered [ 1+ read ] =   5 / 15  =  33.3%
+        # pct covered [ 2+ read ] =   5 / 15  =  33.3%
+        # pct covered [ 3+ read ] =   5 / 15  =  33.3%
+        
+        idx = {0:10, 3:5}
+
+        b = bamlorenzcoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        #import sys
+        #print(cc, file=sys.stderr)
+        self.assertDictEqual(cc, {'minimum_coverage_depth': [0, 3], 'percentage_genome_covered': [100.0, 100.0 * 1.0 / 3.0]})
+
+    def test_003_estimate_idx_from_bam(self):
+        #           x x x x x
+        #           x x x x x x x x x x
+        # x x x x x x x x x x x x x x x
+        # - - - - - - - - - - - - - - - - - - - - - - - - -
+        
+        # pct covered [  0 read ] =  25 / 25  = 100.0%
+        # pct covered [ 1+ read ] =  15 / 25  =  60.0%
+        # pct covered [ 2+ read ] =  10 / 15  =  40.0%
+        # pct covered [ 3+ read ] =   5 / 15  =  20.0%
+        
+        idx = {0:10, 1:5, 2:5, 3:5}
+
+        b = bamlorenzcoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        #import sys
+        #print(cc, file=sys.stderr)
+        
+        self.assertDictEqual(cc, {'minimum_coverage_depth': [0, 1, 2, 3], 'percentage_genome_covered': [100.0, 60.0, 40.0, 20.0]})
 
 
 if __name__ == '__main__':
