@@ -273,9 +273,12 @@ cumu_bases = 0+2+8+3 = 13
         for n in range(len(lorenz_curves['fraction_reads'])):
             output_stream.write(str(lorenz_curves['fraction_reads'][n]) + "\t" + str(lorenz_curves['fraction_genome'][n]) + "\n")
 
-    def export_lorenz_plot(self, lorenz_curves, output_file):
+    def export_lorenz_plot(self, lorenz_curves, output_file, sign_digits=3):
         plt.plot([0.0, 1.0], [0.0, 1.0], 'k--')
         plt.plot(lorenz_curves['fraction_reads'], lorenz_curves['fraction_genome'], '-bo')
+        str_roc = round(lorenz_curves['roc'], sign_digits)
+        a = '{0:.' + str(sign_digits) + 'f}'
+        plt.text(0.0, 0.95, 'ROC=' + a.format(str_roc), fontsize=14)
         plt.xlabel('Fraction sequenced bases')
         plt.ylabel('Fraction covered genome')
         plt.savefig(output_file)
