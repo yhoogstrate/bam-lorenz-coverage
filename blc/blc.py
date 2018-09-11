@@ -248,12 +248,24 @@ cumu_bases = 0+2+8+3 = 13
         total_covered_positions_of_genome = cumu_frac_of_genome
         total_sequenced_bases = cumulative_sequenced_bases
 
+        previous = [0, 0]
+        top = 0
+        denom = total_sequenced_bases * total_covered_positions_of_genome * 2
+
         lorenz_curves = {'fraction_reads': [0.0], 'fraction_genome': [0.0]}
         for depth in sorted(lorenz_idx, reverse=True):
             if depth != 0:
                 lorenz_curves['fraction_reads'].append(round(1.0 * lorenz_idx[depth][1] / total_sequenced_bases, 4))
                 lorenz_curves['fraction_genome'].append(round(1.0 * lorenz_idx[depth][0] / total_covered_positions_of_genome, 4))
 
+                top += (lorenz_idx[depth][1] - previous[1]) * (lorenz_idx[depth][0] - previous[0])
+                top += (lorenz_idx[depth][1] - previous[1]) * (previous[0]) * 2
+
+                previous = lorenz_idx[depth]
+
+        roc = 1.0 * top / denom
+
+        lorenz_curves['roc'] = roc
         return lorenz_curves
 
     def export_lorenz_curves(self, lorenz_curves, output_stream):

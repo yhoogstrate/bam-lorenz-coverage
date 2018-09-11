@@ -146,7 +146,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0]})
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0], 'roc': 0.5})
 
     def test_009_lorenz_02(self):
         # everything covered, is at least covered even densely
@@ -161,7 +161,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0]})
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0], 'roc': 0.5})
 
     def test_010_lorenz_03(self):
         # everything covered, is at least covered even densely
@@ -176,7 +176,33 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0]})
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0], 'roc': 0.425})
+
+    def test_011_lorenz_03(self):
+        # everything covered, is at least covered even densely
+        #             x x x x x
+        #       x x x x x
+        # - - - - - - - - - - - - - -
+
+        test_id = 'blc_011'
+
+        input_file_sam = TEST_DIR + "test_" + test_id + ".sam"
+        input_file_bam = T_TEST_DIR + "test_" + test_id + ".bam"
+
+        sam_to_sorted_bam(input_file_sam, input_file_bam)
+
+        b = bamlorenzcoverage()
+        idx = b.bam_file_to_idx(input_file_bam)
+
+        # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
+        self.assertDictEqual(idx, {0: 6, 1: 6, 2: 2})
+
+        lc = b.estimate_lorenz_curves(idx)
+
+        # print(idx, file=sys.stderr)
+        # denote that it only considers the (size of the) sequences described in the SAM header
+        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0], 'roc': 0.425})
 
 
 if __name__ == '__main__':
