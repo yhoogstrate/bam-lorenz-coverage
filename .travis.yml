@@ -16,7 +16,7 @@ install:
 
 script:
   - nosetests tests/*.py
-#  - ./scripts/flake8.sh
+  - ./scripts/flake8.sh
 
 notifications:
   email: false

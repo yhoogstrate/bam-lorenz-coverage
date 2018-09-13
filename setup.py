@@ -4,7 +4,7 @@
 
 import blc
 from setuptools import setup
-#from distutils.core import setup
+# from distutils.core import setup
 
 
 def get_requirements():
@@ -18,7 +18,6 @@ setup(name="bam-lorenz-coverage",
       packages=["blc"],
       test_suite="tests",
       tests_requires=['nose', 'pytest', 'pytest-cov', 'flake8'],
-#      setup_requires=['numpy','matplotlib'],
       install_requires=get_requirements(),
       version=blc.__version__,
       description="BAM coverage stats plots",
