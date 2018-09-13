@@ -226,6 +226,43 @@ class TestIntronicBreakDetection(unittest.TestCase):
         self.assertEqual(lc['total_sequenced_bases'], 10)
         self.assertEqual(lc['total_covered_positions_of_genome'], 8)
 
+    def test_012_region(self):
+        # everything covered, is at least covered even densely
+        #             x x x x x
+        #       x x x x x
+        # - - - - - - - - - - - - - -
+
+        test_id = 'blc_012'
+
+        input_file_sam = TEST_DIR + "test_" + test_id + ".sam"
+        input_file_bam = T_TEST_DIR + "test_" + test_id + ".bam"
+
+        sam_to_sorted_bam(input_file_sam, input_file_bam)
+
+        b = bamlorenzcoverage()
+        idx, n = b.bam_file_to_idx(input_file_bam, 'chr1:2-14')
+
+        self.assertEqual(n, 13)  # sam header say reference size is 14, but we start at 2nd position
+
+    def test_013_bed(self):
+        # everything covered, is at least covered even densely
+        #             x x x x x
+        #       x x x x x
+        # - - - - - - - - - - - - - -
+
+        test_id = 'blc_013'
+
+        input_file_sam = TEST_DIR + "test_" + test_id + ".sam"
+        input_file_bed = TEST_DIR + "test_" + test_id + ".bed"
+        input_file_bam = T_TEST_DIR + "test_" + test_id + ".bam"
+
+        sam_to_sorted_bam(input_file_sam, input_file_bam)
+
+        b = bamlorenzcoverage()
+        idx, n = b.bam_file_to_idx(input_file_bam, None, input_file_bed)
+
+        self.assertEqual(n, 12)
+
 
 if __name__ == '__main__':
     main()

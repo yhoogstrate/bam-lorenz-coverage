@@ -16,9 +16,11 @@ from blc.blc import bamlorenzcoverage
 @click.option('-L', '--lorenz-svg', nargs=1, help='Output figure Lorenz-curve (SVG).')
 @click.option('-C', '--coverage-svg', nargs=1, help='Output figure Coverage-graph (SVG).')
 @click.option('-s', '--stats', nargs=1, help='Output additional stats to text-file')
-def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file, stats):
+@click.option('-r', '--region', nargs=1, help='Scan depth only in selected region <chr:from-to> (all positions: 1-based)')
+@click.option('-b', '--bed-regions', nargs=1, help='Scan depth only in selected positions or regions (BED file: start: 0-based & end: 1-based)')
+def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file, stats, region, bed_regions):
     b = bamlorenzcoverage()
-    idx_observed, n = b.bam_file_to_idx(input_alignment_file)
+    idx_observed, n = b.bam_file_to_idx(input_alignment_file, region, bed_regions)
 
     if coverage_table or coverage_svg:
         cumulative_coverage_curves = b.estimate_cumulative_coverage_curves(idx_observed)
