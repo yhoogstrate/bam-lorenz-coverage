@@ -2,10 +2,6 @@
 # *- coding: utf-8 -*-
 # vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 textwidth=79:
 
-"""
-[License: GNU General Public License v3 (GPLv3)]
-"""
-
 import blc
 from setuptools import setup
 
@@ -29,9 +25,8 @@ setup(name="bam-lorenz-coverage",
       url=blc.__homepage__,
       keywords=["NGS", "BAM", "Lorenz", "coverage"],
       classifiers=['Environment :: Console',
-          'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-          'Operating System :: OS Independent',
-          'Topic :: Scientific/Engineering',
-          'Topic :: Scientific/Engineering :: Bio-Informatics'
-      ])
+                   'Intended Audience :: Science/Research',
+                   'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                   'Operating System :: OS Independent',
+                   'Topic :: Scientific/Engineering',
+                   'Topic :: Scientific/Engineering :: Bio-Informatics'])
