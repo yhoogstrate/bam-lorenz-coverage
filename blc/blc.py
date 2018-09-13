@@ -13,7 +13,7 @@ class bamlorenzcoverage:
     def __init__(self):
         pass
 
-    def bam_file_to_idx(self, bam_file):
+    def bam_file_to_idx(self, bam_file, region=None, bed_regions=None):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
         """
@@ -28,8 +28,15 @@ class bamlorenzcoverage:
         tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
         os.mkfifo(tmp_filename)
 
+        cmd = ['-a', bam_file]
+        if region:
+            cmd = ['-r', region] + cmd
+        elif bed_regions:
+            cmd = ['-b', bed_regions] + cmd
+        # print(cmd)
+
         # I tried this with the Threading class but this often didnt parallelize
-        parallel_thread = Process(target=pysam.samtools.depth, args=['-a', bam_file], kwargs={'save_stdout': tmp_filename})
+        parallel_thread = Process(target=pysam.samtools.depth, args=cmd, kwargs={'save_stdout': tmp_filename})
         parallel_thread.start()
 
         fh = os.open(tmp_filename, os.O_RDONLY)

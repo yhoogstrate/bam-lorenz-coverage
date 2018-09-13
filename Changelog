@@ -1,4 +1,9 @@
 13-sept-2018:  Youri Hoogstrate
+	* v2.3.0 - Adds arguments -r/--region and -b/--bed-regions to target
+	  specific genomic regions. This way alternative loci can be
+	  excluded for instance.
+
+13-sept-2018:  Youri Hoogstrate
 	* v2.2.0 - Removes --roc argument and adds multiple statistics
 	   including ROC to the -s/--stats argument.
 
