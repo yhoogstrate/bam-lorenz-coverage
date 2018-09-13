@@ -21,6 +21,7 @@ class bamlorenzcoverage:
         # nicer way to ctrl killing the child process first and not have hangs with ctrl c
         # https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
 
+        total_investigated_genomic_positions = 0
         idx_observed = {}
 
         # FIFO stream / named pipe instead of actual file - saves humongous amounts of disk space for temp files
@@ -46,6 +47,7 @@ class bamlorenzcoverage:
 
             for line in lines:
                 if line:  # last line is empty line ('')
+                    total_investigated_genomic_positions += 1
                     depth = line.split('\t', 2)[-1]
 
                     if depth not in idx_observed:
@@ -56,7 +58,7 @@ class bamlorenzcoverage:
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
 
         os.remove(tmp_filename)
-        return idx_observed
+        return (idx_observed, total_investigated_genomic_positions)
 
     def bam_file_to_idx_slow_and_mem_unsafe(self, bam_file):
         """
@@ -266,6 +268,8 @@ cumu_bases = 0+2+8+3 = 13
         roc = 1.0 * top / denom
 
         lorenz_curves['roc'] = roc
+        lorenz_curves['total_sequenced_bases'] = total_sequenced_bases
+        lorenz_curves['total_covered_positions_of_genome'] = total_covered_positions_of_genome
         return lorenz_curves
 
     def export_lorenz_curves(self, lorenz_curves, output_stream):

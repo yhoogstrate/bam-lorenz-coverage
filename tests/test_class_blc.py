@@ -28,7 +28,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
@@ -84,11 +84,13 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
 
-        # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 392, 1: 108})
+
+        # additional stats
+        self.assertEqual(n, 500)
 
     def test_005_deletion(self):
         test_id = 'blc_005'
@@ -99,9 +101,8 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
 
-        # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 392, 1: 108})
 
@@ -114,11 +115,13 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
 
-        # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 400, 1: 100})
+
+        # additional stats
+        self.assertEqual(n, 500)
 
     def test_007_stacking(self):
         test_id = 'blc_007'
@@ -129,11 +132,13 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
 
-        # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 372, 1: 48, 2: 80})
+
+        # additional stats
+        self.assertEqual(n, 500)
 
     def test_008_lorenz_01(self):
         #     x x x x
@@ -146,7 +151,11 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0], 'roc': 0.5})
+        self.assertListEqual(lc['fraction_genome'], [0.0, 1.0])
+        self.assertListEqual(lc['fraction_reads'], [0.0, 1.0])
+
+        # additional stats
+        self.assertEqual(lc['roc'], 0.5)
 
     def test_009_lorenz_02(self):
         # everything covered, is at least covered even densely
@@ -161,7 +170,11 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0], 'fraction_reads': [0.0, 1.0], 'roc': 0.5})
+        self.assertListEqual(lc['fraction_genome'], [0.0, 1.0])
+        self.assertListEqual(lc['fraction_reads'], [0.0, 1.0])
+
+        # additional stats
+        self.assertEqual(lc['roc'], 0.5)
 
     def test_010_lorenz_03(self):
         # everything covered, is at least covered even densely
@@ -175,8 +188,11 @@ class TestIntronicBreakDetection(unittest.TestCase):
         lc = b.estimate_lorenz_curves(idx)
 
         # print(idx, file=sys.stderr)
-        # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0], 'roc': 0.425})
+        self.assertListEqual(lc['fraction_genome'], [0.0, 1.0 * 2 / 8, 1.0])
+        self.assertListEqual(lc['fraction_reads'], [0.0, 1.0 * 4 / 10, 1.0])
+
+        # additional stats
+        self.assertEqual(lc['roc'], 0.425)
 
     def test_011_lorenz_03(self):
         # everything covered, is at least covered even densely
@@ -192,17 +208,23 @@ class TestIntronicBreakDetection(unittest.TestCase):
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
         b = bamlorenzcoverage()
-        idx = b.bam_file_to_idx(input_file_bam)
+        idx, n = b.bam_file_to_idx(input_file_bam)
+        lc = b.estimate_lorenz_curves(idx)
 
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
         self.assertDictEqual(idx, {0: 6, 1: 6, 2: 2})
 
-        lc = b.estimate_lorenz_curves(idx)
-
         # print(idx, file=sys.stderr)
         # denote that it only considers the (size of the) sequences described in the SAM header
-        self.assertDictEqual(lc, {'fraction_genome': [0.0, 1.0 * 2 / 8, 1.0], 'fraction_reads': [0.0, 1.0 * 4 / 10, 1.0], 'roc': 0.425})
+        self.assertListEqual(lc['fraction_genome'], [0.0, 1.0 * 2 / 8, 1.0])
+        self.assertListEqual(lc['fraction_reads'], [0.0, 1.0 * 4 / 10, 1.0])
+
+        # additional stats
+        self.assertEqual(n, 14)  # sam header say reference size is 14
+        self.assertEqual(lc['roc'], 0.425)
+        self.assertEqual(lc['total_sequenced_bases'], 10)
+        self.assertEqual(lc['total_covered_positions_of_genome'], 8)
 
 
 if __name__ == '__main__':
