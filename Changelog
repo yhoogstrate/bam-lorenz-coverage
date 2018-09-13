@@ -1,3 +1,7 @@
+13-sept-2018:  Youri Hoogstrate
+	* v2.2.0 - Removes --roc argument and adds multiple statistics
+	   including ROC to the -s/--stats argument.
+
 11-sept-2018:  Youri Hoogstrate
 	* v2.1.0 - Adds unit tests and can calculate ROC for Lorenz curves
 
