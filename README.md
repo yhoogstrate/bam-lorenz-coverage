@@ -62,7 +62,7 @@ The lowercase arguments (-l, -c) allow extraction of the raw data tables for cus
 ## Examples: ##
 ### Default: ###
 
-The default SVG output figures (`-L`, `-L`) show one sample per figure, and look as follows:
+The default SVG output figures (`-C`, `-L`) show one sample per figure, and look as follows:
 
 ![Default Lorenz plot](share/example_lorenz.png)
 
