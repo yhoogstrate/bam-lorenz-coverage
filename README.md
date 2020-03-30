@@ -10,7 +10,16 @@ Implemented in:
  * Python3 + Matplotlib + Pysam
 
 
-Installation:
+### Note (how this works) ####
+
+By the time of writing, pysam.tools.depth could not write sequentially
+to a python variable. As work around, the tools spawns one thread
+writing the output of pysam.tools.depth to a FIFO (named pipe) in the 
+/tmp folder whereas the other thread parses this FIFO. This is why the
+tool runs two parallel threads.
+
+
+## Installation: ##
 
 ```
 $ git clone https://github.com/yhoogstrate/bam-lorenz-coverage.git
@@ -24,11 +33,12 @@ $ bam-lorenz-coverage --help
 
 Possible issues:
  - pysam is currently incompatible with python 3.7 - manual installation of pysam is still possible (git clone + python setup.py install)
+   * This issue has been resolved
  - matplotlib depends on Tk but does not throw an error if it is missing during installation, only at runtime
    * debian/ubuntu: sudo apt-get install python3-tk
    * arch: pacman -Sy tk
 
-Usage:
+## Usage: ##
 
 ```
 Usage: bam-lorenz-coverage [OPTIONS] INPUT_ALIGNMENT_FILE
@@ -48,3 +58,21 @@ Options:
 ```
 
 The lowercase arguments (-l, -c) allow extraction of the raw data tables for custom plotting. The uppercase arguments (-L, -C) directly generate a plot. The implemented plot only contains one sample per plot. For multi-sample plots, use the column tables and your imagination.
+
+## Examples: ##
+### Default: ###
+
+The default SVG output figures (`-L`, `-L`) show one sample per figure, and look as follows:
+
+![Default Lorenz plot](share/example_lorenz.png)
+
+
+![Default Coverage plot](share/example_coverage.png)
+
+### Custom, using the tables: ###
+
+Using the output tables (`-l`, `-c`) you can also create custom plots, for instance:
+
+![Custom multi-sample plots of the tables](share/custom_plots.png)
+
+
