@@ -9,6 +9,28 @@ There is also support to only analyse specific regions.
 Implemented in:
  * Python3 + Matplotlib + Pysam
 
+### Citing bam-lorenz-coverage ###
+
+When using bam-lorenz-coverage for scientific applications, please
+cite the following manuscript:
+
+[10.1093/gigascience/giab080](http://dx.doi.org/10.1093/gigascience/giab080)
+```
+Hoogstrate Y; Komor MA; Böttcher R; van Riet J; van de Werken HJG;
+van Lieshout S; Hoffmann R; van den Broek E; Bolijn AS; Dits N; Sie D;
+van der Meer D; Pepers F; Bangma CH; van Leenders GJLH; Smid M;
+French PJ; Martens JWM; van Workum W; van der Spek PJ; Janssen B;
+Caldenhoven E; Rausch C; de Jong M; Stubbs AP; Meijer GA; Fijneman RJA;
+Jenster GW:
+
+Fusion transcripts and their genomic breakpoints in poly(A)+ and
+rRNA-minus RNA sequencing data. GigaScience (2021).
+
+http://dx.doi.org/10.1093/gigascience/giab080
+```
+
+This will indirectly help me further maintaining this software package.
+Thank you in advance, Youri
 
 ### Note (how this works) ####
 
