@@ -8,9 +8,34 @@ a region string or BED file.
 
 ## How it works ##
 
+<<<<<<< HEAD
 The tool spawns two parallel processes: one writes `samtools depth -a` output
 to a FIFO (named pipe) in `/tmp`, while the other reads and parses it. This
 avoids writing large temporary files to disk.
+=======
+### Citing bam-lorenz-coverage ###
+
+When using bam-lorenz-coverage for scientific applications, please
+cite the following manuscript:
+
+[10.1093/gigascience/giab080](http://dx.doi.org/10.1093/gigascience/giab080)
+```
+Hoogstrate Y; Komor MA; Böttcher R; van Riet J; van de Werken HJG;
+van Lieshout S; Hoffmann R; van den Broek E; Bolijn AS; Dits N; Sie D;
+van der Meer D; Pepers F; Bangma CH; van Leenders GJLH; Smid M;
+French PJ; Martens JWM; van Workum W; van der Spek PJ; Janssen B;
+Caldenhoven E; Rausch C; de Jong M; Stubbs AP; Meijer GA; Fijneman RJA;
+Jenster GW:
+
+Fusion transcripts and their genomic breakpoints in poly(A)+ and
+rRNA-minus RNA sequencing data. GigaScience (2021).
+
+http://dx.doi.org/10.1093/gigascience/giab080
+```
+
+This will indirectly help me further maintaining this software package.
+Thank you in advance, Youri
+>>>>>>> 4c915ae2b13c73d9972806328bb2f03a91da87a4
 
 ## Installation ##
 
