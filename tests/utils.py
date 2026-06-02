@@ -2,6 +2,9 @@
 # *- coding: utf-8 -*-
 # vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 textwidth=79:
 
+"""[License: GNU General Public License v3 (GPLv3)]
+"""
+
 
 import unittest
 import os

@@ -1,15 +1,28 @@
 #!/usr/bin/env python
+# *- coding: utf-8 -*-
+# vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 textwidth=79:
+
+"""[License: GNU General Public License v3 (GPLv3)]
+"""
 
 import click
 import sys
 
-
-import blc
+from blc import __version__
 from blc.blc import bamlorenzcoverage
+
+_LICENSE = (
+    "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
+    "This is free software: you are free to change and redistribute it.\n"
+    "There is NO WARRANTY, to the extent permitted by law.\n\n"
+    "Copyright (C) 2018  Youri Hoogstrate.\n\n"
+    "For more info please visit:\n"
+    "https://github.com/yhoogstrate/bam-lorenz-coverage"
+)
 
 
 @click.command()
-@click.version_option(blc.__version__ + "\n\n" + blc.__license_notice__ + "\n\nCopyright (C) 2018  " + blc.__author__ + ".\n\nFor more info please visit:\n" + blc.__homepage__)
+@click.version_option(__version__ + "\n\n" + _LICENSE)
 @click.argument('input_alignment_file', type=click.Path(exists=True))
 @click.option('-l', '--lorenz-table', nargs=1, help='Output table Lorenz-curve (for stdout use: -)')
 @click.option('-c', '--coverage-table', nargs=1, help='Output table Coverage-graph (for stdout use: -)')
@@ -58,7 +71,3 @@ def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_
 
 def main():
     CLI()
-
-
-if __name__ == '__main__':
-    main()

@@ -1,42 +1,33 @@
 bam-lorenz-coverage
 ===================
 
-This is a free software package that very easily allows you to generate
-Lorenz plots and Coverage plots, directly from a BAM file. It can also
-output the tables as text documents so you can generate custom plots.
-There is also support to only analyse specific regions.
+A tool to generate Lorenz plots and coverage plots directly from a BAM file,
+using Python3, Matplotlib, Pysam and Click. Raw data tables can be exported
+for custom plotting, and analysis can be restricted to specific regions via
+a region string or BED file.
 
-Implemented in:
- * Python3 + Matplotlib + Pysam
+## How it works ##
 
+The tool spawns two parallel processes: one writes `samtools depth -a` output
+to a FIFO (named pipe) in `/tmp`, while the other reads and parses it. This
+avoids writing large temporary files to disk.
 
-### Note (how this works) ####
-
-By the time of writing, pysam.tools.depth could not write sequentially
-to a python variable. As work around, the tools spawns one thread
-writing the output of pysam.tools.depth to a FIFO (named pipe) in the 
-/tmp folder whereas the other thread parses this FIFO. This is why the
-tool runs two parallel threads.
-
-
-## Installation: ##
+## Installation ##
 
 ```
 $ git clone https://github.com/yhoogstrate/bam-lorenz-coverage.git
 $ cd bam-lorenz-coverage
-$ virtualenv -p python3 .venv
-$ source .venv/bin/activate
-$ python setup.py install
+$ ./scripts/install.sh
 
 $ bam-lorenz-coverage --help
 ```
 
 Possible issues:
- - pysam is currently incompatible with python 3.7 - manual installation of pysam is still possible (git clone + python setup.py install)
-   * This issue has been resolved
+ - `python3-venv` may need to be installed separately on Debian/Ubuntu:
+   `sudo apt install python3-venv`
  - matplotlib depends on Tk but does not throw an error if it is missing during installation, only at runtime
-   * debian/ubuntu: sudo apt-get install python3-tk
-   * arch: pacman -Sy tk
+   * debian/ubuntu: `sudo apt-get install python3-tk`
+   * arch: `pacman -Sy tk`
 
 ## Usage: ##
 

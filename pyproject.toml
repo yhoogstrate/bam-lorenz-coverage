@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bam-lorenz-coverage"
+dynamic = ["version"]
+description = "BAM coverage stats plots"
+requires-python = ">=3.8"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Youri Hoogstrate" }]
+keywords = ["NGS", "BAM", "Lorenz", "coverage"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "click",
+    "pysam",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "flake8"]
+
+[project.urls]
+Homepage = "https://github.com/yhoogstrate/bam-lorenz-coverage"
+
+[project.scripts]
+bam-lorenz-coverage = "blc.cli:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "blc.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["blc*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]

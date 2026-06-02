@@ -1,3 +1,3 @@
 #!/bin/bash
 
-flake8 --ignore=E501 *.py blc/*.py tests/*.py bin/*
+source .venv/bin/activate && flake8 --ignore=E501 blc/ tests/

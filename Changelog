@@ -1,3 +1,14 @@
+02-jun-2026:  Youri Hoogstrate
+	* v2.3.1 - Modernised packaging (setup.py -> pyproject.toml), replaced
+	  Travis CI with GitHub Actions, CLI entry point moved to blc/cli.py.
+	  Fixed bug where Ctrl+C did not terminate child process before cleanup.
+	  Fixed docstring inaccuracy in estimate_lorenz_curves (1/16 -> 1/7).
+	  Performance improvements in bam_file_to_idx: larger read buffer
+	  (4KB -> 256KB), defaultdict, int parsing per line, rpartition.
+	  Legacy methods (bam_file_to_idx_old, bam_file_to_idx_slow_and_mem_unsafe,
+	  bam_file_to_idx_mem_unsafe, coverage_file_to_idx) marked deprecated.
+	  Removed unused dependencies numpy and tqdm from pyproject.toml.
+
 13-sept-2018:  Youri Hoogstrate
 	* v2.3.0 - Adds arguments -r/--region and -b/--bed-regions to target
 	  specific genomic regions. This way alternative loci can be

@@ -1,12 +1,27 @@
 #!/usr/bin/env python
+# *- coding: utf-8 -*-
+# vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 textwidth=79:
+
+"""[License: GNU General Public License v3 (GPLv3)]
+"""
 
 import pysam
 import subprocess
-from tqdm import tqdm
+import functools
+import warnings
+from collections import defaultdict
 import matplotlib.pyplot as plt
 import tempfile
 import os
 from multiprocessing import Process
+
+
+def deprecated(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        warnings.warn(f"{func.__name__} is deprecated", DeprecationWarning, stacklevel=2)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 class bamlorenzcoverage:
@@ -22,7 +37,7 @@ class bamlorenzcoverage:
         # https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
 
         total_investigated_genomic_positions = 0
-        idx_observed = {}
+        idx_observed = defaultdict(int)
 
         # FIFO stream / named pipe instead of actual file - saves humongous amounts of disk space for temp files
         tmp_filename = os.path.join(tempfile.mkdtemp() + '.fifo')
@@ -33,40 +48,37 @@ class bamlorenzcoverage:
             cmd = ['-r', region] + cmd
         elif bed_regions:
             cmd = ['-b', bed_regions] + cmd
-        # print(cmd)
 
         # I tried this with the Threading class but this often didnt parallelize
         parallel_thread = Process(target=pysam.samtools.depth, args=cmd, kwargs={'save_stdout': tmp_filename})
         parallel_thread.start()
 
         fh = os.open(tmp_filename, os.O_RDONLY)
+        try:
+            chunk = os.read(fh, 1024 * 256).decode('ascii')
+            while chunk:
+                split = chunk.split('\n')
 
-        chunk = os.read(fh, 1024 * 4).decode('ascii')
-        while chunk:
-            split = chunk.split('\n')
+                if chunk[-1] == '\n':
+                    lines = split
+                    chunk = os.read(fh, 1024 * 256).decode('ascii')
+                else:
+                    lines = split[:-1]
+                    chunk = split[-1] + os.read(fh, 1024 * 256).decode('ascii')
 
-            if chunk[-1] == '\n':
-                lines = split
-                chunk = os.read(fh, 1024 * 4).decode('ascii')
-            else:
-                lines = split[:-1]
-                chunk = split[-1] + os.read(fh, 1024 * 4).decode('ascii')
+                for line in lines:
+                    if line:  # last line is empty line ('')
+                        total_investigated_genomic_positions += 1
+                        idx_observed[int(line.rpartition('\t')[2])] += 1
+        finally:
+            os.close(fh)
+            parallel_thread.terminate()
+            parallel_thread.join()
+            os.remove(tmp_filename)
 
-            for line in lines:
-                if line:  # last line is empty line ('')
-                    total_investigated_genomic_positions += 1
-                    depth = line.split('\t', 2)[-1]
+        return (dict(idx_observed), total_investigated_genomic_positions)
 
-                    if depth not in idx_observed:
-                        idx_observed[depth] = 1
-                    else:
-                        idx_observed[depth] += 1
-
-        idx_observed = {int(key): value for (key, value) in idx_observed.items()}
-
-        os.remove(tmp_filename)
-        return (idx_observed, total_investigated_genomic_positions)
-
+    @deprecated
     def bam_file_to_idx_slow_and_mem_unsafe(self, bam_file):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
@@ -92,10 +104,12 @@ class bamlorenzcoverage:
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
         return idx_observed
 
+    @deprecated
     def bam_file_to_idx_mem_unsafe(self, bam_file):
         """
         Coverage plot needs the zero-statistic - i.e. the number of genomic bases not covered by reads
         """
+        from tqdm import tqdm
         idx_observed = {}
         for line in tqdm(pysam.samtools.depth('-a', bam_file, split_lines=True)):
             depth = line.split('\t', 2)[-1]
@@ -108,6 +122,7 @@ class bamlorenzcoverage:
         idx_observed = {int(key): value for (key, value) in idx_observed.items()}
         return idx_observed
 
+    @deprecated
     def bam_file_to_idx_old(self, bam_file):
         size_investigated_region = 0
         idx_observed = {}
@@ -127,6 +142,7 @@ class bamlorenzcoverage:
 
         return (idx_observed, size_investigated_region)
 
+    @deprecated
     def coverage_file_to_idx(self, coverage_file):
         """
         do this initially from a coverage file - later pysam.depth direct parsing
@@ -179,23 +195,19 @@ class bamlorenzcoverage:
             accumulation += idx_observed[key]
             idx_observed_cumulative[key] = accumulation
 
-        idx_observed_cumulative_proportional = {}
-        for key in idx_observed_cumulative:
-            idx_observed_cumulative_proportional[key] = 100.0 * idx_observed_cumulative[key] / accumulation
-
-        for min_depth in sorted(idx_observed_cumulative_proportional):
+        for min_depth in sorted(idx_observed_cumulative):
             cumulative_coverage_curves['minimum_coverage_depth'].append(min_depth)
-            cumulative_coverage_curves['percentage_genome_covered'].append(idx_observed_cumulative_proportional[min_depth])
+            cumulative_coverage_curves['percentage_genome_covered'].append(100.0 * idx_observed_cumulative[min_depth] / accumulation)
 
         return cumulative_coverage_curves
 
     def export_cumulative_coverage_curves(self, cumulative_coverage_curves, output_stream):
         output_stream.write("X_minimum_coverage_depth\tY_percentage_genome_covered\n")
-        for n in range(len(cumulative_coverage_curves['minimum_coverage_depth'])):
-            output_stream.write(str(cumulative_coverage_curves['minimum_coverage_depth'][n]) + "\t" + str(cumulative_coverage_curves['percentage_genome_covered'][n]) + "\n")
+        for depth, pct in zip(cumulative_coverage_curves['minimum_coverage_depth'], cumulative_coverage_curves['percentage_genome_covered']):
+            output_stream.write(str(depth) + "\t" + str(pct) + "\n")
 
     def export_cumulative_coverage_plot(self, cumulative_coverage_curves, output_file, min_percentage_covered=0.5):
-        n = len([_ for _ in cumulative_coverage_curves['percentage_genome_covered'] if _ >= min_percentage_covered])
+        n = sum(1 for x in cumulative_coverage_curves['percentage_genome_covered'] if x >= min_percentage_covered)
 
         plt.plot(cumulative_coverage_curves['minimum_coverage_depth'][1:n], cumulative_coverage_curves['percentage_genome_covered'][1:n], '-bo')
         plt.xlabel('Minimum coverage depth')
@@ -231,30 +243,31 @@ cumu_freq = 1+4+2+9 = 16
 cumu_bases = 0+2+8+3 = 13
 
         Out:
-        "Using 3/13 of the sequenced bases, 1/16 of the genome is covered"
+        "Using 3/13 of the sequenced bases, 1/7 of the covered genome is covered"
+        (denominator is covered positions only, i.e. depth > 0; ensures curve ends at (1,1))
 
         """
         lorenz_idx = {}
 
         previous_depth = None
-        cumu_frac_of_genome = 0
+        cumu_positions = 0
         cumulative_sequenced_bases = 0
 
         for depth in sorted(idx_observed, reverse=True):
             if depth != 0:
-                frac_of_genome = idx_observed[depth]
+                positions = idx_observed[depth]
                 sequenced_bases = idx_observed[depth] * depth
 
-                cumu_frac_of_genome = frac_of_genome
+                cumu_positions = positions
                 cumulative_sequenced_bases = sequenced_bases
                 if previous_depth:
-                    cumu_frac_of_genome += lorenz_idx[previous_depth][0]
+                    cumu_positions += lorenz_idx[previous_depth][0]
                     cumulative_sequenced_bases += lorenz_idx[previous_depth][1]
-                lorenz_idx[depth] = [cumu_frac_of_genome, cumulative_sequenced_bases]
+                lorenz_idx[depth] = [cumu_positions, cumulative_sequenced_bases]
 
                 previous_depth = depth
 
-        total_covered_positions_of_genome = cumu_frac_of_genome
+        total_covered_positions_of_genome = cumu_positions
         total_sequenced_bases = cumulative_sequenced_bases
 
         previous = [0, 0]
@@ -281,8 +294,8 @@ cumu_bases = 0+2+8+3 = 13
 
     def export_lorenz_curves(self, lorenz_curves, output_stream):
         output_stream.write("X-fraction-sequenced-bases\tY-fraction-genome-covered\n")
-        for n in range(len(lorenz_curves['fraction_reads'])):
-            output_stream.write(str(lorenz_curves['fraction_reads'][n]) + "\t" + str(lorenz_curves['fraction_genome'][n]) + "\n")
+        for reads, genome in zip(lorenz_curves['fraction_reads'], lorenz_curves['fraction_genome']):
+            output_stream.write(str(reads) + "\t" + str(genome) + "\n")
 
     def export_lorenz_plot(self, lorenz_curves, output_file, sign_digits=3):
         plt.plot([0.0, 1.0], [0.0, 1.0], 'k--')
