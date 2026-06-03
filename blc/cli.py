@@ -2,29 +2,27 @@
 # *- coding: utf-8 -*-
 # vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 textwidth=79:
 
-"""[License: GNU General Public License v3 (GPLv3)]
-"""
+"""Estimates the lorenz coverage from BAM file(s).
 
-"""
-    Estimates the lorenz coverage from BAM file(s).
-    Copyright (C) 2021  Youri Hoogstrate
+License: GNU General Public License v3 (GPLv3)
+Copyright (C) 2021  Youri Hoogstrate
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 """
 
 import click
 import sys
 
 from blc import __version__
-from blc.blc import bamlorenzcoverage
+from blc.blc import BamLorenzCoverage
 
 _LICENSE = (
     "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
@@ -39,15 +37,15 @@ _LICENSE = (
 @click.command()
 @click.version_option(__version__ + "\n\n" + _LICENSE)
 @click.argument('input_alignment_file', type=click.Path(exists=True))
-@click.option('-l', '--lorenz-table', nargs=1, help='Output table Lorenz-curve (for stdout use: -)')
-@click.option('-c', '--coverage-table', nargs=1, help='Output table Coverage-graph (for stdout use: -)')
-@click.option('-L', '--lorenz-svg', nargs=1, help='Output figure Lorenz-curve (SVG).')
-@click.option('-C', '--coverage-svg', nargs=1, help='Output figure Coverage-graph (SVG).')
-@click.option('-s', '--stats', nargs=1, help='Output additional stats to text-file')
-@click.option('-r', '--region', nargs=1, help='Scan depth only in selected region <chr:from-to> (all positions: 1-based)')
-@click.option('-b', '--bed-regions', nargs=1, help='Scan depth only in selected positions or regions (BED file: start: 0-based & end: 1-based)')
+@click.option('-l', '--lorenz-table', help='Output table Lorenz-curve (for stdout use: -)')
+@click.option('-c', '--coverage-table', help='Output table Coverage-graph (for stdout use: -)')
+@click.option('-L', '--lorenz-svg', help='Output figure Lorenz-curve (SVG).')
+@click.option('-C', '--coverage-svg', help='Output figure Coverage-graph (SVG).')
+@click.option('-s', '--stats', help='Output additional stats to text-file')
+@click.option('-r', '--region', help='Scan depth only in selected region <chr:from-to> (all positions: 1-based)')
+@click.option('-b', '--bed-regions', help='Scan depth only in selected positions or regions (BED file: start: 0-based & end: 1-based)')
 def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_file, stats, region, bed_regions):
-    b = bamlorenzcoverage()
+    b = BamLorenzCoverage()
     idx_observed, n = b.bam_file_to_idx(input_alignment_file, region, bed_regions)
 
     if coverage_table or coverage_svg:
@@ -76,12 +74,12 @@ def CLI(lorenz_table, coverage_table, lorenz_svg, coverage_svg, input_alignment_
         if lorenz_svg:
             b.export_lorenz_plot(lorenz_curves, lorenz_svg)
 
-    if stats:
-        with open(stats, "w") as fh:
-            fh.write("total_investigated_genomic_positions\t" + str(n) + "\n")
-            fh.write("ROC_Lorenz_curve\t" + str(lorenz_curves["roc"]) + "\n")
-            fh.write("total_sequenced_bases\t" + str(lorenz_curves["total_sequenced_bases"]) + "\n")
-            fh.write("total_covered_positions_of_genome\t" + str(lorenz_curves["total_covered_positions_of_genome"]) + "\n")
+        if stats:
+            with open(stats, "w") as fh:
+                fh.write("total_investigated_genomic_positions\t" + str(n) + "\n")
+                fh.write("ROC_Lorenz_curve\t" + str(lorenz_curves["roc"]) + "\n")
+                fh.write("total_sequenced_bases\t" + str(lorenz_curves["total_sequenced_bases"]) + "\n")
+                fh.write("total_covered_positions_of_genome\t" + str(lorenz_curves["total_covered_positions_of_genome"]) + "\n")
 
 
 def main():

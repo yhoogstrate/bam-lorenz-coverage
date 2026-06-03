@@ -8,7 +8,10 @@
 
 import unittest
 import os
-from blc.blc import bamlorenzcoverage
+import io
+import tempfile
+import re
+from blc.blc import BamLorenzCoverage
 from utils import main, sam_to_sorted_bam
 
 
@@ -30,7 +33,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
 
         # print(idx, file=sys.stderr)
@@ -50,7 +53,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         idx = {0: 10, 3: 5}
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         cc = b.estimate_cumulative_coverage_curves(idx)
 
         # import sys
@@ -70,7 +73,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         idx = {0: 10, 1: 5, 2: 5, 3: 5}
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         cc = b.estimate_cumulative_coverage_curves(idx)
 
         # import sys
@@ -86,7 +89,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
 
         # denote that it only considers the (size of the) sequences described in the SAM header
@@ -103,7 +106,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
 
         # denote that it only considers the (size of the) sequences described in the SAM header
@@ -117,7 +120,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
 
         # denote that it only considers the (size of the) sequences described in the SAM header
@@ -134,7 +137,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
 
         # denote that it only considers the (size of the) sequences described in the SAM header
@@ -149,7 +152,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         idx = {0: 6, 1: 4}
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         lc = b.estimate_lorenz_curves(idx)
 
         # print(idx, file=sys.stderr)
@@ -168,7 +171,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         idx = {0: 6, 2: 4}
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         lc = b.estimate_lorenz_curves(idx)
 
         # print(idx, file=sys.stderr)
@@ -187,7 +190,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         idx = {0: 6, 1: 6, 2: 2}
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         lc = b.estimate_lorenz_curves(idx)
 
         # print(idx, file=sys.stderr)
@@ -210,7 +213,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam)
         lc = b.estimate_lorenz_curves(idx)
 
@@ -242,7 +245,7 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam, 'chr1:2-14')
 
         self.assertEqual(n, 13)  # sam header say reference size is 14, but we start at 2nd position
@@ -261,10 +264,154 @@ class TestIntronicBreakDetection(unittest.TestCase):
 
         sam_to_sorted_bam(input_file_sam, input_file_bam)
 
-        b = bamlorenzcoverage()
+        b = BamLorenzCoverage()
         idx, n = b.bam_file_to_idx(input_file_bam, None, input_file_bed)
 
         self.assertEqual(n, 12)
+
+    def test_014_export_cumulative_coverage_curves_tsv(self):
+        idx = {0: 10, 1: 5, 2: 5}
+        b = BamLorenzCoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        output = io.StringIO()
+        b.export_cumulative_coverage_curves(cc, output)
+
+        lines = output.getvalue().strip().split('\n')
+        self.assertEqual(lines[0], "X_minimum_coverage_depth\tY_percentage_genome_covered")
+        self.assertEqual(len(lines), 4)
+        self.assertTrue(all('\t' in line for line in lines[1:]))
+
+    def test_015_export_cumulative_coverage_to_file(self):
+        idx = {0: 10, 1: 5}
+        b = BamLorenzCoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.tsv') as f:
+            temp_path = f.name
+
+        try:
+            with open(temp_path, 'w') as f:
+                b.export_cumulative_coverage_curves(cc, f)
+
+            with open(temp_path, 'r') as f:
+                content = f.read()
+
+            self.assertIn("X_minimum_coverage_depth", content)
+            self.assertIn("Y_percentage_genome_covered", content)
+        finally:
+            os.unlink(temp_path)
+
+    def test_016_export_lorenz_curves_tsv(self):
+        idx = {0: 6, 1: 4}
+        b = BamLorenzCoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        output = io.StringIO()
+        b.export_lorenz_curves(lc, output)
+
+        lines = output.getvalue().strip().split('\n')
+        self.assertEqual(lines[0], "X-fraction-sequenced-bases\tY-fraction-genome-covered")
+        self.assertEqual(len(lines), 3)
+
+    def test_017_empty_coverage_dict(self):
+        idx = {}
+        b = BamLorenzCoverage()
+
+        try:
+            cc = b.estimate_cumulative_coverage_curves(idx)
+            self.assertEqual(len(cc['minimum_coverage_depth']), 0)
+        except (ValueError, ZeroDivisionError):
+            pass
+
+    def test_018_single_depth_value(self):
+        idx = {5: 10}
+        b = BamLorenzCoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        self.assertEqual(len(cc['minimum_coverage_depth']), 1)
+        self.assertEqual(cc['percentage_genome_covered'][0], 100.0)
+
+    def test_019_very_high_coverage(self):
+        idx = {0: 1000, 1000: 100, 10000: 10}
+        b = BamLorenzCoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        self.assertEqual(cc['percentage_genome_covered'][0], 100.0)
+        self.assertTrue(all(0 <= p <= 100 for p in cc['percentage_genome_covered']))
+
+    def test_020_lorenz_with_single_depth(self):
+        idx = {0: 90, 5: 10}
+        b = BamLorenzCoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        self.assertIsInstance(lc['roc'], float)
+        self.assertGreaterEqual(lc['roc'], 0.0)
+        self.assertLessEqual(lc['roc'], 1.0)
+
+    def test_021_export_cumulative_coverage_plot_creates_file(self):
+        idx = {0: 10, 1: 5, 2: 3}
+        b = BamLorenzCoverage()
+        cc = b.estimate_cumulative_coverage_curves(idx)
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.svg') as f:
+            temp_path = f.name
+
+        try:
+            b.export_cumulative_coverage_plot(cc, temp_path)
+
+            self.assertTrue(os.path.exists(temp_path))
+            self.assertGreater(os.path.getsize(temp_path), 0)
+
+            with open(temp_path, 'r') as f:
+                content = f.read()
+            self.assertIn('<svg', content)
+            self.assertIn('</svg>', content)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_022_export_lorenz_plot_creates_file(self):
+        idx = {0: 6, 1: 4}
+        b = BamLorenzCoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.svg') as f:
+            temp_path = f.name
+
+        try:
+            b.export_lorenz_plot(lc, temp_path)
+
+            self.assertTrue(os.path.exists(temp_path))
+
+            with open(temp_path, 'r') as f:
+                content = f.read()
+
+            self.assertIn('ROC=', content)
+            self.assertIn('<svg', content)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_023_lorenz_plot_with_custom_precision(self):
+        idx = {0: 6, 1: 4}
+        b = BamLorenzCoverage()
+        lc = b.estimate_lorenz_curves(idx)
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.svg') as f:
+            temp_path = f.name
+
+        try:
+            b.export_lorenz_plot(lc, temp_path, sign_digits=1)
+
+            with open(temp_path, 'r') as f:
+                content = f.read()
+
+            roc_match = re.search(r'ROC=(\d+\.\d+)', content)
+            self.assertIsNotNone(roc_match)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
 
 
 if __name__ == '__main__':
