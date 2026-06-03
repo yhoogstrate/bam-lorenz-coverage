@@ -1,6 +1,10 @@
 bam-lorenz-coverage
 ===================
 
+[![Python 3](https://img.shields.io/badge/Python-3-blue.svg)](https://www.python.org/)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+[![DOI: 10.1093/gigascience/giab080](https://img.shields.io/badge/DOI-10.1093%2Fgigascience%2Fgiab080-blue.svg)](https://doi.org/10.1093/gigascience/giab080)
+
 A tool to generate Lorenz plots and coverage plots directly from a BAM file,
 using Python3, Matplotlib, Pysam and Click. Raw data tables can be exported
 for custom plotting, and analysis can be restricted to specific regions via
