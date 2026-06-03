@@ -1,3 +1,16 @@
+03-jun-2026:  Claude Code
+	* v2.3.2 (unreleased) - Code quality improvements and expanded test coverage.
+	  Refactored bam_file_to_idx with robust exception handling (nested try/finally
+	  for guaranteed FIFO cleanup). Converted string concatenation to f-strings in
+	  export functions. Extracted magic number 1024*256 to READ_BUFFER_SIZE constant.
+	  Renamed class from bamlorenzcoverage to BamLorenzCoverage (PEP 8 compliance).
+	  Fixed CLI option parsing (removed nargs=1). Fixed undefined variable in stats
+	  output by restructuring code flow. Added 10 new comprehensive tests covering
+	  export functions (TSV format, file I/O), error handling (empty dict, extreme
+	  coverage, boundary values), and SVG rendering (file creation, XML validity,
+	  precision handling). Fixed flake8 E402 by combining duplicate docstrings.
+	  Added global permission rules denying automatic test execution.
+
 02-jun-2026:  Youri Hoogstrate
 	* v2.3.1 - Modernised packaging (setup.py -> pyproject.toml), replaced
 	  Travis CI with GitHub Actions, CLI entry point moved to blc/cli.py.
