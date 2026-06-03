@@ -1,6 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata from this file."
 type: software
+title: "BAM Lorenz Coverage"
+authors:
+  - family-names: "Hoogstrate"
+    given-names: "Youri"
+repository-code: "https://github.com/yhoogstrate/bam-lorenz-coverage"
 references:
   - authors:
       - family-names: "Hoogstrate"
